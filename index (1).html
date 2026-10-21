@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EduMetrics - Analisis Data Siswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #E6E6FA; color: #1E2A4A; }
+    .view { transition: opacity .35s ease, transform .35s ease; }
+    .view.hide { opacity: 0; transform: translateY(8px); pointer-events: none; }
+    .num { font-variant-numeric: tabular-nums; }
+    .nav-item { display: flex; align-items: center; gap: .75rem; width: 100%; padding: .65rem .9rem; border-radius: .75rem; font-weight: 600; font-size: .9rem; text-align: left; color: #3A3F66; border-left: 4px solid transparent; }
+    .nav-item:hover { background: rgba(255,255,255,.55); }
+    .nav-item.active { background: #fff; color: #0066CC; border-left-color: #00BFFF; }
+    tbody tr:nth-child(even) { background: #F6F3FD; }
+    :focus-visible { outline: 3px solid #007BFF; outline-offset: 2px; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ===== LOGIN ===== -->
+<section id="loginView" class="view min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md rounded-2xl p-8 shadow-lg" style="background:#D9CCF3">
+    <div class="flex items-center gap-3">
+      <div class="h-11 w-11 rounded-xl bg-[#007BFF] grid place-items-center text-white" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-extrabold leading-tight">EduMetrics</h1>
+        <p class="text-sm text-[#4A4F78]">Analisis data siswa</p>
+      </div>
+    </div>
+
+    <form id="loginForm" class="mt-7 space-y-4" novalidate>
+      <div>
+        <label for="username" class="block text-sm font-semibold mb-1">Username</label>
+        <input id="username" autocomplete="username" class="w-full rounded-lg border border-[#B9A8E3] bg-white px-3 py-2.5" placeholder="Masukkan username">
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-semibold mb-1">Password</label>
+        <input id="password" type="password" autocomplete="current-password" class="w-full rounded-lg border border-[#B9A8E3] bg-white px-3 py-2.5" placeholder="Masukkan password">
+      </div>
+      <label class="flex items-center gap-2 text-sm cursor-pointer">
+        <input id="showPw" type="checkbox" class="h-4 w-4 accent-[#007BFF]"> Tampilkan password
+      </label>
+      <p id="loginError" class="hidden text-sm font-semibold text-red-700" role="alert">Username atau password salah. Coba lagi atau gunakan akun demo.</p>
+      <button type="submit" class="w-full rounded-lg bg-[#007BFF] hover:bg-[#0066D6] text-white font-bold py-2.5">Login</button>
+    </form>
+
+    <div class="mt-6 rounded-xl bg-white/70 border border-[#C5B6EA] p-4">
+      <p class="text-sm font-bold">Try Demo Account</p>
+      <p class="text-sm text-[#4A4F78] mt-1">Username <b>guru</b>, password <b>edu123</b></p>
+      <button id="fillDemo" type="button" class="mt-3 rounded-lg border border-[#007BFF] text-[#0066CC] hover:bg-[#E4F1FF] text-sm font-semibold px-3 py-1.5">Isi otomatis</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DASHBOARD ===== -->
+<section id="appView" class="view hide hidden min-h-screen">
+ <div class="md:flex min-h-screen">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="hidden md:flex md:w-64 shrink-0 flex-col p-4 gap-1 bg-[#D9CCF3] md:min-h-screen fixed md:static inset-y-0 left-0 w-64 z-30 shadow-xl md:shadow-none">
+    <div class="flex items-center gap-3 px-2 py-3 mb-3">
+      <div class="h-9 w-9 rounded-lg bg-[#007BFF] grid place-items-center text-white" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      </div>
+      <span class="font-extrabold text-lg">EduMetrics</span>
+    </div>
+    <nav id="nav" class="flex flex-col gap-1" aria-label="Menu utama"></nav>
+    <button id="logoutBtn" class="nav-item mt-auto text-red-700">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Keluar
+    </button>
+  </aside>
+
+  <!-- Konten -->
+  <div class="flex-1 min-w-0 p-4 sm:p-8">
+    <button id="menuBtn" class="md:hidden mb-4 rounded-lg bg-white px-3 py-2 text-sm font-semibold border border-[#C5B6EA]" aria-label="Buka menu">Menu</button>
+
+    <header class="flex items-center gap-3">
+      <div class="h-11 w-11 rounded-xl bg-[#007BFF] grid place-items-center text-white" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg>
+      </div>
+      <div>
+        <h2 id="pageTitle" class="text-2xl font-extrabold leading-tight">Remedial &amp; Pengayaan</h2>
+        <p id="pageDesc" class="text-sm text-[#4A4F78]">Pantau nilai awal, input nilai remedial, dan lihat status ketuntasan terbaru.</p>
+      </div>
+    </header>
+
+    <!-- Halaman Remedial & Pengayaan -->
+    <div id="pageRemedial">
+      <div class="mt-6 flex flex-col sm:flex-row gap-3 sm:items-end">
+        <div>
+          <label for="fKelas" class="block text-sm font-semibold mb-1">Filter kelas</label>
+          <select id="fKelas" class="rounded-lg border border-[#B9A8E3] bg-white px-3 py-2 min-w-[10rem]">
+            <option value="">Semua kelas</option><option>X AK 1</option><option>X AK 2</option>
+          </select>
+        </div>
+        <div>
+          <label for="fStatus" class="block text-sm font-semibold mb-1">Filter status</label>
+          <select id="fStatus" class="rounded-lg border border-[#B9A8E3] bg-white px-3 py-2 min-w-[10rem]">
+            <option value="">Semua status</option><option value="Remedial">Remedial</option><option value="Pengayaan">Pengayaan</option>
+          </select>
+        </div>
+        <p id="summary" class="sm:ml-auto text-sm font-semibold text-[#0066CC]"></p>
+      </div>
+
+      <div class="mt-4 overflow-x-auto rounded-xl border border-[#C5B6EA] bg-white/80">
+        <table class="w-full text-sm text-left whitespace-nowrap">
+          <thead class="bg-[#007BFF] text-white">
+            <tr>
+              <th class="px-3 py-3">ID</th><th class="px-3 py-3">Nama</th><th class="px-3 py-3">Topik</th>
+              <th class="px-3 py-3 text-right">Awal</th><th class="px-3 py-3 text-right">KKM</th><th class="px-3 py-3 text-right">Selisih</th>
+              <th class="px-3 py-3">Status</th><th class="px-3 py-3">Nilai remedial</th>
+              <th class="px-3 py-3 text-right">Akhir</th><th class="px-3 py-3">Status terbaru</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="hidden mt-3 text-sm text-[#4A4F78]">Tidak ada siswa yang cocok dengan filter. Ubah filter untuk melihat data lain.</p>
+    </div>
+
+    <!-- Halaman lain (placeholder) -->
+    <div id="pageOther" class="hidden mt-8 rounded-xl border border-dashed border-[#B9A8E3] bg-white/60 p-8 text-center">
+      <p class="font-bold">Halaman ini belum tersedia di versi demo.</p>
+      <p class="text-sm text-[#4A4F78] mt-1">Pilih menu Remedial &amp; Pengayaan untuk melihat tabel nilai.</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<script>
+  // ---------- Data: tepat 28 siswa ----------
+  const KKM = { "Jurnal Umum": 75, "Buku Besar": 75, "Neraca Saldo": 78 };
+  const rows = [
+    ["Aditya Pratama","X AK 1","Jurnal Umum",68],["Bunga Lestari","X AK 1","Jurnal Umum",90],
+    ["Citra Maharani","X AK 1","Jurnal Umum",72],["Dimas Saputra","X AK 1","Buku Besar",60],
+    ["Eka Wulandari","X AK 1","Buku Besar",84],["Fajar Nugroho","X AK 1","Buku Besar",74],
+    ["Gita Anjani","X AK 1","Neraca Saldo",88],["Hendra Wijaya","X AK 1","Neraca Saldo",65],
+    ["Indah Permata","X AK 1","Neraca Saldo",92],["Joko Santoso","X AK 1","Jurnal Umum",70],
+    ["Kartika Dewi","X AK 1","Buku Besar",79],["Lukman Hakim","X AK 1","Neraca Saldo",71],
+    ["Maya Safitri","X AK 1","Jurnal Umum",82],["Nanda Kusuma","X AK 1","Buku Besar",66],
+    ["Okta Ramadhan","X AK 2","Neraca Saldo",76],["Putri Ayu","X AK 2","Jurnal Umum",94],
+    ["Qori Hidayat","X AK 2","Buku Besar",73],["Rizky Firmansyah","X AK 2","Jurnal Umum",69],
+    ["Sari Rahmawati","X AK 2","Neraca Saldo",85],["Taufik Hidayah","X AK 2","Buku Besar",62],
+    ["Umar Fauzi","X AK 2","Neraca Saldo",58],["Vina Oktaviani","X AK 2","Jurnal Umum",86],
+    ["Wahyu Setiawan","X AK 2","Buku Besar",75],["Xena Amelia","X AK 2","Neraca Saldo",80],
+    ["Yoga Prasetyo","X AK 2","Jurnal Umum",73],["Zahra Nabila","X AK 2","Buku Besar",91],
+    ["Arif Rahman","X AK 2","Neraca Saldo",67],["Bayu Anggara","X AK 2","Jurnal Umum",77]
+  ];
+  const siswa = rows.map(([nama, kelas, topik, awal], i) => ({
+    id: "S" + String(i + 1).padStart(2, "0"), nama, kelas, topik, awal, kkm: KKM[topik], remedial: null
+  }));
+  const statusAwal = s => (s.awal < s.kkm ? "Remedial" : "Pengayaan");
+  const nilaiAkhir = s => (s.remedial === null ? s.awal : Math.max(s.awal, s.remedial));
+  const tuntas = s => nilaiAkhir(s) >= s.kkm;
+
+  // ---------- Helper ----------
+  const $ = id => document.getElementById(id);
+  const DEMO = { user: "guru", pass: "edu123" };
+
+  // ---------- Login ----------
+  $("showPw").addEventListener("change", e => { $("password").type = e.target.checked ? "text" : "password"; });
+  $("fillDemo").addEventListener("click", () => {
+    $("username").value = DEMO.user; $("password").value = DEMO.pass;
+    $("loginError").classList.add("hidden"); $("password").focus();
+  });
+  $("loginForm").addEventListener("submit", e => {
+    e.preventDefault();
+    if ($("username").value.trim() === DEMO.user && $("password").value === DEMO.pass) {
+      $("loginError").classList.add("hidden");
+      swap($("loginView"), $("appView"), "flex");
+    } else {
+      $("loginError").classList.remove("hidden");
+    }
+  });
+  $("logoutBtn").addEventListener("click", () => {
+    $("loginForm").reset(); $("password").type = "password";
+    swap($("appView"), $("loginView"), "flex");
+  });
+
+  // Transisi fade antar tampilan
+  function swap(from, to) {
+    from.classList.add("hide");
+    setTimeout(() => {
+      from.classList.add("hidden");
+      to.classList.remove("hidden");
+      void to.offsetWidth; // paksa reflow agar fade-in berjalan
+      to.classList.remove("hide");
+    }, 350);
+  }
+
+  // ---------- Sidebar ----------
+  const ico = {
+    d: "M3 12l9-9 9 9M5 10v10h14V10", s: "M16 11a4 4 0 1 0-8 0M4 21a8 8 0 0 1 16 0",
+    m: "M4 5h16M4 12h16M4 19h10", i: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
+    a: "M4 20V10M10 20V4M16 20v-7M22 20H2", r: "M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"
+  };
+  const menus = [
+    ["Dashboard", ico.d], ["Data Siswa", ico.s], ["Mapel & Topik", ico.m],
+    ["Input Nilai", ico.i], ["Analisis Per Topik", ico.a], ["Remedial & Pengayaan", ico.r]
+  ];
+  $("nav").innerHTML = menus.map(([t, p]) => `
+    <button class="nav-item" data-menu="${t}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg>${t}
+    </button>`).join("");
+
+  function setMenu(name) {
+    document.querySelectorAll(".nav-item[data-menu]").forEach(b => b.classList.toggle("active", b.dataset.menu === name));
+    const isRem = name === "Remedial & Pengayaan";
+    $("pageRemedial").classList.toggle("hidden", !isRem);
+    $("pageOther").classList.toggle("hidden", isRem);
+    $("pageTitle").textContent = name;
+    $("pageDesc").textContent = isRem ? "Pantau nilai awal, input nilai remedial, dan lihat status ketuntasan terbaru." : "";
+    if (window.innerWidth < 768) $("sidebar").classList.add("hidden");
+  }
+  $("nav").addEventListener("click", e => { const b = e.target.closest("[data-menu]"); if (b) setMenu(b.dataset.menu); });
+  $("menuBtn").addEventListener("click", () => $("sidebar").classList.toggle("hidden"));
+  setMenu("Remedial & Pengayaan");
+
+  // ---------- Tabel ----------
+  const stBadge = {
+    Remedial: "bg-[#FDE8C8] text-[#8A4B00]", Pengayaan: "bg-[#D6E9FF] text-[#0057B8]"
+  };
+  function akhirCells(s) {
+    const ok = tuntas(s);
+    return { akhir: nilaiAkhir(s), badge: ok
+      ? '<span class="rounded-full px-3 py-1 text-xs font-bold bg-green-100 text-green-800">Tuntas</span>'
+      : '<span class="rounded-full px-3 py-1 text-xs font-bold bg-red-100 text-red-800">Belum tuntas</span>' };
+  }
+  function rowHTML(s) {
+    const st = statusAwal(s), sel = s.awal - s.kkm, c = akhirCells(s);
+    const input = st === "Remedial"
+      ? `<input type="number" min="0" max="100" inputmode="numeric" data-id="${s.id}" value="${s.remedial ?? ""}" aria-label="Nilai remedial ${s.nama}" class="rem w-24 rounded-md border border-[#B9A8E3] bg-white px-2 py-1.5 num" placeholder="0-100">`
+      : '<span class="text-[#6A6F98]">Tidak perlu</span>';
+    return `<tr data-row="${s.id}">
+      <td class="px-3 py-2.5 num">${s.id}</td>
+      <td class="px-3 py-2.5 font-medium">${s.nama}<span class="block text-xs text-[#6A6F98] font-normal">${s.kelas}</span></td>
+      <td class="px-3 py-2.5">${s.topik}</td>
+      <td class="px-3 py-2.5 text-right num">${s.awal}</td>
+      <td class="px-3 py-2.5 text-right num">${s.kkm}</td>
+      <td class="px-3 py-2.5 text-right num font-semibold ${sel < 0 ? "text-red-700" : "text-green-700"}">${sel > 0 ? "+" + sel : sel}</td>
+      <td class="px-3 py-2.5"><span class="rounded-full px-3 py-1 text-xs font-bold ${stBadge[st]}">${st}</span></td>
+      <td class="px-3 py-2.5">${input}</td>
+      <td class="px-3 py-2.5 text-right num font-bold" data-akhir>${c.akhir}</td>
+      <td class="px-3 py-2.5" data-status>${c.badge}</td>
+    </tr>`;
+  }
+  function render() {
+    const k = $("fKelas").value, st = $("fStatus").value;
+    const list = siswa.filter(s => (!k || s.kelas === k) && (!st || statusAwal(s) === st));
+    $("tbody").innerHTML = list.map(rowHTML).join("");
+    $("empty").classList.toggle("hidden", list.length > 0);
+    summary();
+  }
+  function summary() {
+    const rem = siswa.filter(s => statusAwal(s) === "Remedial");
+    const selesai = rem.filter(tuntas).length;
+    $("summary").textContent = `${rem.length} siswa remedial, ${selesai} sudah tuntas`;
+  }
+  // Input remedial: perbarui hanya baris terkait supaya fokus tidak hilang
+  $("tbody").addEventListener("input", e => {
+    if (!e.target.classList.contains("rem")) return;
+    const s = siswa.find(x => x.id === e.target.dataset.id);
+    let v = e.target.value === "" ? null : Number(e.target.value);
+    if (v !== null) { v = Math.min(100, Math.max(0, v)); if (String(v) !== e.target.value) e.target.value = v; }
+    s.remedial = v;
+    const tr = e.target.closest("tr"), c = akhirCells(s);
+    tr.querySelector("[data-akhir]").textContent = c.akhir;
+    tr.querySelector("[data-status]").innerHTML = c.badge;
+    summary();
+  });
+  $("fKelas").addEventListener("change", render);
+  $("fStatus").addEventListener("change", render);
+  render();
+</script>
+</body>
+</html>
